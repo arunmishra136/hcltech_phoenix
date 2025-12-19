@@ -4,16 +4,14 @@ import Doctor from "../model/doctor.js";
 
 const router = express.Router();
 
-const APPOINTMENT_DURATION = 30; // minutes
+const APPOINTMENT_DURATION = 30;
 
-// Utility: convert HH:MM to total minutes
 const timeToMinutes = (timeStr) => {
   const [h, m] = timeStr.split(":").map(Number);
   return h * 60 + m;
 };
 
-// @route   POST /api/booking/book
-// @desc    Book an appointment
+
 router.post("/book", async (req, res) => {
   try {
     const { patientId, doctorId, date, time } = req.body;
@@ -25,7 +23,6 @@ router.post("/book", async (req, res) => {
       });
     }
 
-    // 1️⃣ Check doctor
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({
@@ -41,7 +38,6 @@ router.post("/book", async (req, res) => {
       });
     }
 
-    // Availability format example: "10:00-18:00"
     const [startAvail, endAvail] = doctor.availability.split("-");
 
     const requestedStart = timeToMinutes(time);
@@ -50,7 +46,6 @@ router.post("/book", async (req, res) => {
     const availStart = timeToMinutes(startAvail);
     const availEnd = timeToMinutes(endAvail);
 
-    // 2️⃣ Validate availability
     if (
       requestedStart < availStart ||
       requestedEnd > availEnd
@@ -61,7 +56,6 @@ router.post("/book", async (req, res) => {
       });
     }
 
-    // 3️⃣ Check for overlapping appointments
     const existingAppointments = await Appointment.find({
       doctorId,
       date
@@ -83,7 +77,6 @@ router.post("/book", async (req, res) => {
       }
     }
 
-    // 4️⃣ Create appointment
     const appointment = await Appointment.create({
       patientId,
       doctorId,

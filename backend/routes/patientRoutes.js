@@ -9,24 +9,22 @@ const router = Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, specialization, experience } = req.body;
+    const { name, email, password } = req.body;
 
-    const existing = await Doctor.findOne({ email });
+    const existing = await Patient.findOne({ email });
     if (existing) return res.status(400).json({ message: "Email already registered" });
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const doctor = await Doctor.create({
+    const patient = await Patient.create({
       name,
       email,
-      password: hashed,
-      specialization,
-      experience
+      password: hashed
     });
 
     // Create JWT
     const token = jwt.sign(
-      { id: doctor._id, role: "doctor" },
+      { id: patient._id, role: "patient" },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -41,11 +39,11 @@ router.post("/register", async (req, res) => {
     });
 
     res.json({
-      message: "Doctor registered & logged in",
-      doctor: {
-        id: doctor._id,
-        email: doctor.email,
-        name: doctor.name
+      message: "Patient registered & logged in",
+      patient: {
+        id: patient._id,
+        email: patient.email,
+        name: patient.name
       }
     });
   } catch (err) {
@@ -59,14 +57,14 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const doctor = await Doctor.findOne({ email });
-    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+    const patient = await Patient.findOne({ email });
+    if (!patient) return res.status(404).json({ message: "Patient not found" });
 
-    const match = await bcrypt.compare(password, doctor.password);
+    const match = await bcrypt.compare(password, patient.password);
     if (!match) return res.status(400).json({ message: "Invalid password" });
 
     const token = jwt.sign(
-      { id: doctor._id, role: "doctor" },
+      { id: patient._id, role: "patient" },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -79,12 +77,11 @@ router.post("/login", async (req, res) => {
     });
 
     res.json({
-      message: "Doctor login successful",
-      doctor: {
-        id: doctor._id,
-        email: doctor.email,
-        name: doctor.name,
-        specialization: doctor.specialization
+      message: "Patient login successful",
+      patient: {
+        id: patient._id,
+        email: patient.email,
+        name: patient.name
       },
     });
   } catch (err) {
@@ -95,7 +92,8 @@ router.post("/login", async (req, res) => {
 
 
 router.post("/logout", (req, res) => {
-  res.json({ message: "Logout successful — delete token on client" });
+  res.clearCookie("token");
+  res.json({ message: "Patient logout successful" });
 });
 
 

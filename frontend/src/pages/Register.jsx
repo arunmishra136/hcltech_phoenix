@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState("patient");
   const [consent, setConsent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,26 +20,22 @@ const Register = () => {
       return;
     }
 
+    setLoading(true);
+
     try {
-      const url =
-        role === "doctor"
-          ? "http://localhost:5000/api/doctors/register"
-          : "http://localhost:5000/api/patients/register";
-
-      const payload = {
-        name,
-        email,
-        password,
-      };
-
-      const res = await axios.post(url, payload, {
-  withCredentials: true
-});
-      console.log("Registered successfully:", res.data);
-      alert("Registration successful");
+      const userData = { name, email, password };
+      console.log('Registering with data:', userData, 'role:', role);
+      const result = await register(userData, role);
+      console.log('Registration successful:', result);
+      // Navigate immediately based on selected role
+      const targetPath = role === "doctor" ? "/doctor/home" : "/patient/home";
+      console.log('Navigating to:', targetPath);
+      navigate(targetPath);
     } catch (err) {
-      console.error(err.response?.data || err.message);
+      console.error('Registration failed:', err.response?.data || err.message);
       alert("Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -102,9 +101,10 @@ const Register = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Register
+            {loading ? "Registering..." : "Register"}
           </button>
         </form>
 

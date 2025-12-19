@@ -9,7 +9,7 @@ const router = Router();
 
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, specialization, experience } = req.body;
+    const { name, email, password } = req.body;
     console.log(name);
 
     const existing = await Doctor.findOne({ email });
@@ -20,12 +20,9 @@ router.post("/register", async (req, res) => {
     const doctor = await Doctor.create({
       name,
       email,
-      password: hashed,
-      specialization,
-      experience
+      password: hashed
     });
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: doctor._id, role: "doctor" },
       process.env.JWT_SECRET,
@@ -35,7 +32,7 @@ router.post("/register", async (req, res) => {
     // Set Cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // change to true on HTTPS
+      secure: false, 
       sameSite: "lax", 
       maxAge: 24 * 60 * 60 * 1000
     });
@@ -56,9 +53,7 @@ router.post("/register", async (req, res) => {
 });
 
 
-/*
-  @route   POST /api/doctors/login
-*/
+
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -75,10 +70,10 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Set Cookie
+ 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // HTTPS later
+      secure: false, 
       sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000
     });
@@ -98,11 +93,10 @@ router.post("/login", async (req, res) => {
   }
 });
 
-/*
-  @route   POST /api/doctors/logout
-*/
+
 router.post("/logout", (req, res) => {
-  res.json({ message: "Doctor logout successful — delete token on client" });
+  res.clearCookie("token");
+  res.json({ message: "Doctor logout successful" });
 });
 
 
@@ -123,6 +117,16 @@ router.put("/profile", authDoctor, async (req, res) => {
     }).select("-password");
 
     res.json({ message: "Profile updated", updated });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+router.get("/", async (req, res) => {
+  try {
+    const doctors = await Doctor.find({}, "-password").sort({ name: 1 });
+    res.json(doctors);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

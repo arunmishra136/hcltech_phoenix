@@ -1,32 +1,28 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("patient");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
-      const url =
-        role === "doctor"
-          ? "http://localhost:5000/api/doctors/login"
-          : "http://localhost:5000/api/patients/login";
-
-      const res = await axios.post(url, { email, password });
-
-      console.log("Login success:", res.data);
-
-      // store token later
-      // localStorage.setItem("token", res.data.token);
-
-      alert("Login successful");
+      await login(email, password, role);
+      // Navigate immediately based on selected role
+      navigate(role === "doctor" ? "/doctor/home" : "/patient/home");
     } catch (err) {
       console.error(err.response?.data || err.message);
       alert("Invalid credentials");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,9 +79,10 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 

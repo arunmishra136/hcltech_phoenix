@@ -7,7 +7,7 @@ const doctorSchema = new mongoose.Schema({
   specialization: String,
   experience: Number,
   rating: Number,
-  availability: String       // e.g. "Mon-Fri 10am-6pm"
+  availability: String       
 }, { timestamps: true });
 
 export default mongoose.model("Doctor", doctorSchema);
