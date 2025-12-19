@@ -115,8 +115,8 @@ Database (MongoDB)
 
 ```
 healthcare-app/
-├── client/      # React + Vite frontend
-├── server/      # Node + Express backend
+├── frontend/      # React + Vite frontend
+├── backend/      # Node + Express backend
 ├── .env
 ├── README.md
 └── package.json
